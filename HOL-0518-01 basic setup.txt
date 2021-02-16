@@ -81,5 +81,44 @@ nslookup hol518.demo.local 192.168.1.2
 	ls -le this_is_isilon.txt
 	ls -len this_is_isilon.txt
 	
-	echo "have fun!"
+	echo 'Have fun!'
+
+###
+# Auditing specific lab setup starts here
+###
+
+# First, lets create a specific audited AZ
+ isi zone zones create --name=auditedzone --path=/ifs/auditedzone --create-path --auth-providers=ads:DEMO.LOCAL
+ 
+ isi network pools create --id=groupnet0.subnet0.auditedpool --ranges=192.168.1.160-192.168.1.180 --access-zone=auditedzone \ 
+ 	--alloc-method=dynamic --ifaces=1-3:ext-1 --sc-subnet=subnet0 --sc-dns-zone=topsecret.demo.local --description='Audited AZ Pool'
+
+ # Validate with:  
+ isi network pools view groupnet0.subnet0.auditedpool 
+ 
+# Be sure to go configure the topsecret delegation in AD DNS, similar to above
+
+ ###
+ # Enable protocol auditing
+ ###
+ isi audit settings global modify --protocol-auditing-enabled=yes --audited-zones=auditedzone 
+ 
+ # Validate with:  
+ isi audit settings global view
+ 
+ 
+ 
+
+
+
+
+
+
+
+ 
+ 
+
+
+
+
 	
