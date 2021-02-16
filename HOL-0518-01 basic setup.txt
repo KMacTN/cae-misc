@@ -106,15 +106,44 @@ nslookup hol518.demo.local 192.168.1.2
  # Validate with:  
  isi audit settings global view
  
+ # Enable just the specific events needed, note any read type event may have heavy performance penalty associated with itt. 
  
+ isi audit settings modify --zone=auditedzone \
+ --audit-success='create_file,close_file_modified,delete_file,delete_directory,rename_file,rename_directory,set_security_file,set_security_directory' \
+ --audit-failure='create_file,close_file_modified,delete_file,delete_directory,rename_file,rename_directory,set_security_file,set_security_directory' \
+ --clear-syslog-audit-events --syslog-forwarding-enabled=no
  
+ # Validate with:  
+ isi audit settings view --zone=auditedzone
 
-
-
-
-
-
-
+ # Create an SMB share for testing in the auditedzone
+ isi smb shares create --zone=auditedzone --path=/ifs/auditedzone/supersecrets --name=supersecrets --description='Super Top Secret Documents' \ 
+ --auto-create-directory=yes --browsable=no --continuously-available=yes 
+ 
+ # Allow wide open share level access, not recommended for a production usecase
+ isi smb shares permission modify --zone=auditedzone supersecrets --wellknown=Everyone --permission-type=allow --permission=full 
+ 
+ # Lets set the owner to jwick
+ chown -s 'DEMO\jwick' /ifs/auditedzone/supersecrets
+ chmod +a user 'DEMO\jwick' allow generic_all /ifs/auditedzone/supersecrets
+ 
+ ###
+ # Use the CLI utility isi_audit_viewer to demonstrate the audit events being created
+ #  Remember that it is node specific, so use the -n option to specify which node you are connecting to
+ ###
+ isi_audit_viewer -t protocol -v  -n 1
+ 
+ ###
+ # Use Windows Explorer on the Lab Desktop to access the share with the UNC path: \\topsecret.demo.lab\supersecrets
+ # You can map a drive as the demo user "DEMO\jwick" or whomeveer you'd like
+ ###
+ In Windows Explorer, create a folder, create a new text document, copy some existing files over, delete a few files, change security, etc
+ 
+ ###
+ # Use the CLI utility isi_audit_viewer again to show the new events.  Remember to select the node you connected to
+ ###
+ isi_audit_viewer -t protocol -v  -n 1
+ 
  
  
 
